@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Website Class DKV</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Sakura Falling Animation */
+    @keyframes fall {
+      0% { transform: translate3d(0, -10vh, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate3d(20vw, 110vh, 0) rotate(360deg); opacity: 0; }
+    }
+    .sakura-petal {
+      position: fixed;
+      top: -10%;
+      z-index: 10;
+      pointer-events: none;
+      background: linear-gradient(135deg, #ffb7c5, #ffb7c5);
+      border-radius: 15px 2px 15px 15px;
+      animation: fall linear infinite;
+      box-shadow: 0 2px 5px rgba(255, 183, 197, 0.4);
+    }
+    /* Glassmorphism Classes */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 10px 30px 0 rgba(244, 63, 94, 0.08);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card:hover {
+      box-shadow: 0 15px 35px 0 rgba(244, 63, 94, 0.12);
+    }
+    .view-section {
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .view-hidden {
+      display: none !important;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes pulse-soft {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.9; }
+    }
+    .pulse-soft { animation: pulse-soft 3s infinite ease-in-out; }
+  </style>
+</head>
+<body class="text-gray-800 font-sans min-h-screen relative overflow-x-hidden pb-24 transition-all duration-700 bg-rose-50" style="background-attachment: fixed; background-size: cover; background-position: center;">
+
+  <div id="sakura-container" class="fixed inset-0 pointer-events-none z-10"></div>
+
+  <audio id="bg-music" loop class="hidden"></audio>
+
+  <div class="relative z-20 max-w-7xl mx-auto px-4 py-6 flex flex-col md:flex-row gap-6">
+    
+    <aside class="glass-card rounded-3xl p-6 md:w-64 flex-shrink-0 flex flex-col gap-5 h-fit md:sticky md:top-6 shadow-xl">
+      <div class="text-center pb-4 border-b border-pink-200/50 relative">
+        <div class="relative group w-20 h-20 mx-auto mb-3">
+          <div class="absolute inset-0 bg-pink-300 rounded-full blur opacity-30 group-hover:opacity-60 transition-opacity"></div>
+          <img id="nav-logo" src="https://files.catbox.moe/lyxkgp.png" alt="Logo" class="w-20 h-20 rounded-full border-2 border-white shadow-md object-cover relative z-10 transition-transform duration-500 group-hover:rotate-12">
+        </div>
+        <h1 id="nav-title" class="text-xl font-bold text-pink-700 leading-tight transition-colors duration-300">DKV Class</h1>
+        <p id="nav-subtitle" class="text-xs text-gray-500 mt-1">SMK Muhammadiyah 7 Kedumpring</p>
+      </div>
+
+      <div class="bg-white/80 border border-pink-100/60 p-3 rounded-2xl text-center shadow-inner">
+        <p class="text-[10px] text-pink-500 font-bold tracking-wider uppercase"><i class="fa-regular fa-clock"></i> Waktu Asia/Jakarta</p>
+        <p id="realtime-clock" class="text-lg font-mono font-bold text-gray-800 mt-0.5">00:00:00 WIB</p>
+        <p id="realtime-date" class="text-[10px] text-gray-400 mt-0.5">Memuat...</p>
+      </div>
+
+      <nav class="flex flex-col gap-2">
+        <button onclick="switchView('beranda')" id="btn-beranda" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-pink-600 bg-pink-50 shadow-sm"><i class="fa-solid fa-house"></i> Beranda</button>
+        <button onclick="switchView('galeri')" id="btn-galeri" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-gray-600 hover:bg-pink-50 hover:text-pink-600"><i class="fa-solid fa-photo-film"></i> Galeri Kelas</button>
+        <button onclick="switchView('komentar')" id="btn-komentar" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-gray-600 hover:bg-pink-50 hover:text-pink-600"><i class="fa-solid fa-comments"></i> Buku Tamu</button>
+        <button onclick="switchView('admin')" id="btn-admin" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-gray-600 hover:bg-pink-50 hover:text-pink-600 border-t border-pink-100/50 mt-4 pt-4"><i class="fa-solid fa-user-gear"></i> Panel Admin</button>
+      </nav>
+
+      <div id="music-indicator" class="hidden text-xs bg-pink-50/50 p-3 rounded-xl text-pink-700 flex items-center gap-2 justify-center transition-all duration-500">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
+        </span>
+        <span class="truncate font-semibold"><i class="fa-solid fa-music text-pink-500 animate-bounce"></i> Musik Latar Aktif</span>
+      </div>
+    </aside>
+
+    <main class="flex-1 w-full relative">
+
+      <section id="view-beranda" class="view-section glass-card rounded-3xl p-8 md:p-12 text-center min-h-[75vh] flex flex-col justify-center items-center shadow-lg">
+        <div class="relative mb-8 transform hover:scale-105 transition-transform duration-500">
+          <div class="absolute inset-0 bg-pink-300 rounded-full blur-2xl opacity-40 pulse-soft"></div>
+          <img id="class-logo" src="https://files.catbox.moe/lyxkgp.png" alt="Logo Kelas" class="w-36 h-36 md:w-48 md:h-48 rounded-full border-4 border-white shadow-2xl object-cover relative z-10 transition-all duration-500">
+        </div>
+        <h2 id="home-class-name" class="text-4xl md:text-6xl font-extrabold text-pink-800 drop-shadow-sm mb-3">X DKV</h2>
+        <h3 id="home-sub" class="text-xl md:text-2xl text-pink-600 font-semibold mb-6">Angkatan 25 - SMK Muhammadiyah 7 Kedumpring</h3>
+        
+        <div class="bg-white/60 backdrop-blur-sm p-6 rounded-2xl w-full max-w-2xl shadow-inner border border-white/40 mb-8 transform hover:scale-[1.01] transition-all duration-300">
+          <p id="home-desc" class="text-gray-700 md:text-lg italic leading-relaxed">
+            "Selamat datang di website kenangan kelas kami. Tempat di mana setiap momen indah diabadikan dalam kedamaian guguran sakura."
+          </p>
+        </div>
+
+        <div class="inline-flex items-center gap-3 bg-pink-100 text-pink-800 px-6 py-3 rounded-full font-bold shadow-sm border border-pink-200">
+          <i class="fa-solid fa-user-tie text-pink-500"></i>
+          <span>Wali Kelas: <span id="home-wali">Bpk. Aris Abdul Ghofur</span></span>
+        </div>
+      </section>
+
+      <section id="view-galeri" class="view-section view-hidden glass-card rounded-3xl p-6 md:p-8 shadow-lg">
+        <div class="flex items-center gap-4 border-b border-pink-100 pb-5 mb-6">
+          <div class="p-3 bg-pink-100 rounded-2xl text-pink-600"><i class="fa-solid fa-photo-film text-2xl"></i></div>
+          <div>
+            <h2 class="text-2xl md:text-3xl font-bold text-pink-800">Galeri Kenangan Kelas</h2>
+            <p class="text-xs md:text-sm text-gray-500">Sentuh foto/video untuk berinteraksi, menyukai, melihat relasi, serta memberi balasan komentar.</p>
+          </div>
+        </div>
+        <div id="grid-galeri" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          </div>
+      </section>
+
+      <section id="view-komentar" class="view-section view-hidden glass-card rounded-3xl p-6 md:p-10 shadow-lg max-w-4xl mx-auto">
+        <div class="text-center mb-8">
+          <h2 class="text-3xl font-extrabold text-pink-800 mb-2">Buku Tamu</h2>
+          <p class="text-sm text-gray-500">Tinggalkan pesan, kesan, atau sekadar salam hangat untuk perkembangan kelas kita.</p>
+        </div>
+
+        <form id="comment-form" class="mb-8 bg-white/70 p-5 rounded-2xl border border-white/50 shadow-sm flex flex-col gap-4 transform hover:shadow-md transition-all">
+          <div id="gb-reply-indicator" class="hidden bg-pink-100 text-pink-700 px-4 py-2 rounded-xl flex justify-between items-center text-xs font-semibold animate-pulse">
+            <span id="gb-reply-text">Membalas @username</span>
+            <button type="button" onclick="cancelCommentReply('gb')" class="text-pink-900 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-pink-100">
+              <i class="fa-solid fa-user text-pink-400"></i>
+              <input type="text" id="cmt-sender" placeholder="Nama Anda..." required class="bg-transparent border-none outline-none w-full text-sm font-semibold">
+            </div>
+            <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-pink-100">
+              <i class="fa-solid fa-address-card text-pink-400"></i>
+              <input type="text" id="cmt-role" placeholder="Status (Wali Murid / Siswa / Alumni)..." class="bg-transparent border-none outline-none w-full text-sm">
+            </div>
+          </div>
+          <div class="relative">
+            <textarea id="cmt-text" placeholder="Tulis pesan terbaik Anda di sini..." required class="w-full bg-white border border-pink-100 rounded-xl p-3 text-sm outline-none focus:ring-1 focus:ring-pink-300 resize-none h-24"></textarea>
+          </div>
+          <button type="submit" class="self-end bg-pink-500 hover:bg-pink-600 text-white font-semibold px-6 py-2 rounded-xl transition-all shadow-md flex items-center gap-2 transform hover:-translate-y-0.5">
+            <i class="fa-solid fa-paper-plane"></i> Kirim Pesan
+          </button>
+        </form>
+
+        <div id="comment-list" class="space-y-4">
+          </div>
+      </section>
+
+      <section id="view-admin" class="view-section view-hidden glass-card rounded-3xl p-6 md:p-8 shadow-lg max-w-5xl mx-auto">
+        <div id="admin-login-box" class="py-12 max-w-sm mx-auto text-center">
+          <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center text-pink-500 mx-auto mb-4 border-2 border-white shadow-md">
+            <i class="fa-solid fa-lock text-xl"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Akses Panel Admin</h2>
+          <form id="admin-login-form" class="flex flex-col gap-4">
+            <input type="password" id="admin-password" placeholder="Masukkan Password Admin" required class="px-4 py-3 rounded-xl border border-pink-100 focus:border-pink-500 outline-none text-center bg-white">
+            <p id="login-error" class="text-red-500 text-xs hidden">Password salah! Silakan coba lagi.</p>
+            <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md">Masuk Panel</button>
+          </form>
+        </div>
+
+        <div id="admin-dashboard" class="hidden space-y-6">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-gradient-to-r from-pink-600 to-pink-500 text-white p-6 rounded-2xl border-none shadow-lg gap-4">
+            <div>
+              <h2 class="text-2xl font-bold flex items-center gap-2"><i class="fa-solid fa-chart-line animate-pulse"></i> Dasbor Admin & Statistik</h2>
+              <p class="opacity-90 text-xs mt-1">Ubah logo, beranda, kelola galeri secara terpusat, dan moderasi komentar dengan hak akses penuh.</p>
+            </div>
+            <button onclick="logoutAdmin()" class="bg-white text-pink-600 hover:bg-pink-50 text-xs font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm self-stretch md:self-auto text-center">Keluar Panel</button>
+          </div>
+
+          <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+            <div class="bg-white/80 p-4 rounded-2xl border border-white/50 shadow-sm flex flex-col items-center justify-center text-center">
+              <i class="fa-solid fa-users text-blue-500 text-xl mb-1"></i>
+              <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">User Join</span>
+              <span id="stat-users" class="text-xl font-extrabold text-gray-800">0</span>
+            </div>
+            <div class="bg-white/80 p-4 rounded-2xl border border-white/50 shadow-sm flex flex-col items-center justify-center text-center">
+              <i class="fa-solid fa-shoe-prints text-indigo-500 text-xl mb-1"></i>
+              <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Aktivitas</span>
+              <span id="stat-logs" class="text-xl font-extrabold text-gray-800">0</span>
+            </div>
+            <div class="bg-white/80 p-4 rounded-2xl border border-white/50 shadow-sm flex flex-col items-center justify-center text-center">
+              <i class="fa-solid fa-image text-pink-500 text-xl mb-1"></i>
+              <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total Foto</span>
+              <span id="stat-photos" class="text-xl font-extrabold text-gray-800">0</span>
+            </div>
+            <div class="bg-white/80 p-4 rounded-2xl border border-white/50 shadow-sm flex flex-col items-center justify-center text-center">
+              <i class="fa-solid fa-video text-purple-500 text-xl mb-1"></i>
+              <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total Video</span>
+              <span id="stat-videos" class="text-xl font-extrabold text-gray-800">0</span>
+            </div>
+            <div class="bg-white/80 p-4 rounded-2xl border border-white/50 shadow-sm flex flex-col items-center justify-center text-center">
+              <i class="fa-solid fa-comments text-green-500 text-xl mb-1"></i>
+              <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Buku Tamu</span>
+              <span id="stat-guestbook" class="text-xl font-extrabold text-gray-800">0</span>
+            </div>
+            <div class="bg-white/80 p-4 rounded-2xl border border-white/50 shadow-sm flex flex-col items-center justify-center text-center">
+              <i class="fa-solid fa-heart text-red-500 text-xl mb-1"></i>
+              <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total Likes</span>
+              <span id="stat-likes" class="text-xl font-extrabold text-gray-800">0</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white/70 p-5 rounded-2xl border border-white/50 shadow-sm space-y-4">
+              <h3 class="text-lg font-bold text-pink-800 border-b pb-2"><i class="fa-solid fa-sliders"></i> Informasi Beranda</h3>
+              
+              <form id="settings-form" class="grid grid-cols-2 gap-3">
+                <div class="col-span-2 flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">Judul Website</label>
+                  <input type="text" id="set-title" name="title" class="p-2 border rounded-lg text-sm bg-white outline-none focus:ring-1 focus:ring-pink-300">
+                </div>
+                <div class="col-span-2 flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">Nama Sekolah</label>
+                  <input type="text" id="set-school" name="sekolah" class="p-2 border rounded-lg text-sm bg-white outline-none focus:ring-1 focus:ring-pink-300">
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">Nama Kelas</label>
+                  <input type="text" id="set-classname" name="namaKelas" class="p-2 border rounded-lg text-sm bg-white outline-none focus:ring-1 focus:ring-pink-300">
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">Angkatan / No</label>
+                  <input type="text" id="set-classno" name="nomorKelas" class="p-2 border rounded-lg text-sm bg-white outline-none focus:ring-1 focus:ring-pink-300">
+                </div>
+                <div class="col-span-2 flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">Wali Kelas</label>
+                  <input type="text" id="set-wali" name="waliKelas" class="p-2 border rounded-lg text-sm bg-white outline-none focus:ring-1 focus:ring-pink-300">
+                </div>
+                <div class="col-span-2 flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">Keterangan/Sambutan</label>
+                  <textarea id="set-desc" name="desc" class="p-2 border rounded-lg text-sm bg-white h-20 resize-none outline-none focus:ring-1 focus:ring-pink-300"></textarea>
+                </div>
+                
+                <div class="col-span-2 flex flex-col gap-1 border border-dashed border-pink-300 p-3 rounded-xl bg-pink-50/30">
+                  <label class="text-xs font-bold text-pink-800 flex items-center gap-1"><i class="fa-solid fa-tree"></i> Ganti Logo Website (Bulat)</label>
+                  <input type="file" id="set-logo-file" name="logoFile" accept="image/*" class="text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-pink-100 file:text-pink-700 hover:file:bg-pink-200 cursor-pointer">
+                </div>
+
+                <div class="col-span-2 flex flex-col gap-1 border border-dashed border-pink-300 p-3 rounded-xl bg-pink-50/30">
+                  <label class="text-xs font-bold text-pink-800 flex items-center gap-1"><i class="fa-solid fa-image"></i> Ganti Background Website</label>
+                  <input type="file" id="set-bgimage-file" name="bgImageFile" accept="image/*" class="text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-pink-100 file:text-pink-700 hover:file:bg-pink-200 cursor-pointer">
+                </div>
+
+                <button type="submit" class="col-span-2 mt-2 bg-pink-600 hover:bg-pink-700 text-white font-bold py-2.5 rounded-xl transition-all text-sm shadow-md">Simpan Konfigurasi</button>
+              </form>
+            </div>
+
+            <div class="space-y-4">
+              <div class="bg-white/70 p-5 rounded-2xl border border-white/50 shadow-sm space-y-3">
+                <h3 class="text-lg font-bold text-pink-800 border-b pb-2"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Media Galeri</h3>
+                <form id="media-upload-form" class="space-y-3">
+                  <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-gray-600">Jenis Media</label>
+                    <select id="upload-media-type" name="type" class="p-2 border rounded-lg text-sm bg-white outline-none">
+                      <option value="foto">Foto (JPG / PNG / JPEG)</option>
+                      <option value="video">Video (MP4 / WebM)</option>
+                    </select>
+                  </div>
+                  <div class="flex flex-col gap-1 border border-dashed border-pink-200 p-3 rounded-xl bg-white/50">
+                    <input type="file" id="upload-media-file" name="mediaFile" required class="text-xs text-gray-500 cursor-pointer">
+                  </div>
+                  <button type="submit" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 rounded-xl text-sm transition-all shadow-md">Unggah Konten</button>
+                </form>
+              </div>
+
+              <div class="bg-white/70 p-5 rounded-2xl border border-white/50 shadow-sm space-y-3">
+                <h3 class="text-lg font-bold text-pink-800 border-b pb-2"><i class="fa-solid fa-music"></i> Pengaturan Musik Latar</h3>
+                <form id="music-upload-form" class="space-y-2">
+                  <input type="file" id="upload-music-file" name="bgMusicFile" accept="audio/mp3" required class="text-xs text-gray-500 block w-full">
+                  <div class="grid grid-cols-2 gap-2 pt-2">
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-xl text-xs transition-all shadow-sm">Upload Lagu</button>
+                    <button type="button" id="btn-clear-music" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-xl text-xs transition-all shadow-sm">Hapus Musik</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white/70 p-6 rounded-2xl border border-white/50 shadow-sm space-y-4">
+            <h3 class="text-lg font-bold text-gray-800 border-b pb-2"><i class="fa-solid fa-photo-film text-pink-600"></i> Manajemen Terpadu Berkas Galeri</h3>
+            <div id="admin-media-list" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="fixed bottom-6 right-6 z-50 flex flex-col items-center gap-2">
+    <div id="music-pulse-waves" class="hidden absolute -inset-2 bg-pink-400/30 rounded-full animate-ping pointer-events-none"></div>
+    <button onclick="toggleMusicPlayback()" class="w-14 h-14 bg-pink-500 hover:bg-pink-600 text-white rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 transform hover:scale-110 relative z-10 border-2 border-white">
+      <i id="float-music-icon" class="fa-solid fa-play ml-0.5 text-xl"></i>
+    </button>
+  </div>
+
+  <div id="instagram-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-2 md:p-6 transition-opacity duration-300 opacity-0">
+    <div class="bg-white w-full max-w-5xl h-[92vh] md:h-[85vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row transform scale-95 transition-transform duration-300">
+      
+      <div class="w-full md:w-[60%] bg-black flex items-center justify-center relative h-64 md:h-full flex-shrink-0">
+        <img id="modal-img" src="" alt="Post" class="w-full h-full object-contain hidden">
+        <video id="modal-vid" src="" controls class="w-full h-full object-contain hidden"></video>
+      </div>
+
+      <div class="w-full md:w-[40%] flex flex-col h-full bg-white relative">
+        <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+          <div class="flex items-center gap-2">
+            <img id="modal-sync-logo" src="" alt="Logo" class="w-8 h-8 rounded-full border border-pink-100 object-cover">
+            <div>
+              <span class="font-bold text-sm text-gray-800 block leading-tight">Postingan Kelas</span>
+              <span id="modal-media-time" class="text-[9px] text-gray-400">Baru Saja</span>
+            </div>
+          </div>
+          <button onclick="closeInstagramModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors hidden md:block">
+            <i class="fa-solid fa-xmark text-gray-500"></i>
+          </button>
+        </div>
+
+        <div id="modal-comments-area" class="flex-1 overflow-y-auto p-4 space-y-3 hide-scrollbar bg-gray-50/50">
+          </div>
+
+        <div class="p-3 border-t border-gray-100 flex justify-between items-center bg-white">
+          <button onclick="likeActiveMedia()" class="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-rose-50 text-gray-600 transition-colors group">
+            <i id="modal-like-icon" class="fa-regular fa-heart text-lg group-hover:scale-110 transition-transform"></i>
+            <span id="modal-like-count" class="text-xs font-bold">0 Suka</span>
+          </button>
+          <span class="text-[10px] text-gray-400 font-mono tracking-tight"><i class="fa-solid fa-lock-open text-pink-400"></i> Secure JSON DB</span>
+        </div>
+
+        <form id="modal-comment-form" class="p-3 border-t border-gray-100 bg-white flex flex-col gap-2">
+          <div id="modal-reply-indicator" class="hidden bg-pink-50 text-pink-700 px-3 py-1 rounded-lg flex justify-between items-center text-[11px] font-semibold">
+            <span id="modal-reply-text">Membalas @username</span>
+            <button type="button" onclick="cancelCommentReply('modal')" class="text-pink-900 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+
+          <div class="flex gap-2">
+            <input type="text" id="modal-cmt-name" placeholder="Nama..." required class="w-[30%] px-2.5 py-2 text-xs border border-gray-200 rounded-xl outline-none focus:border-pink-400 font-semibold">
+            <div class="w-[70%] flex bg-gray-100 rounded-xl px-3 py-1 items-center border border-transparent focus-within:border-pink-300 bg-white">
+              <input type="text" id="modal-cmt-text" placeholder="Tambahkan komentar..." required class="bg-transparent text-xs outline-none w-full py-1 text-gray-700">
+              <button type="submit" class="text-pink-600 hover:text-pink-700 text-xs font-bold px-1">Kirim</button>
+            </div>
+          </div>
+        </form>
+
+        <button onclick="closeInstagramModal()" class="absolute top-3 right-3 md:hidden bg-black/60 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs backdrop-blur-sm shadow">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="custom-alert" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl transform scale-95 transition-transform duration-300 text-center space-y-4">
+      <div class="w-12 h-12 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center mx-auto text-xl"><i id="alert-icon" class="fa-solid fa-circle-info"></i></div>
+      <h4 id="alert-title" class="text-base font-bold text-gray-800">Pemberitahuan</h4>
+      <p id="alert-message" class="text-xs text-gray-500 leading-relaxed">Pesan kustom di sini.</p>
+      
+      <div id="alert-prompt-container" class="hidden">
+        <textarea id="alert-prompt-input" class="w-full p-2.5 border border-pink-200 rounded-xl text-xs outline-none focus:ring-1 focus:ring-pink-400 bg-gray-50 resize-none h-16"></textarea>
+      </div>
+
+      <div class="flex gap-2 pt-2 justify-center">
+        <button id="alert-btn-cancel" onclick="closeAlert(false)" class="hidden px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl text-xs transition-colors">Batal</button>
+        <button id="alert-btn-confirm" onclick="closeAlert(true)" class="px-5 py-2 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl text-xs transition-colors shadow-sm">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Inisialisasi Environment Lokal Session
+    if (!localStorage.getItem('sakura_user_id')) {
+      localStorage.setItem('sakura_user_id', 'user_' + Math.random().toString(36).substring(2, 11));
+    }
+    const userId = localStorage.getItem('sakura_user_id');
+
+    // State Variables Global
+    let siteSettings = {};
+    let mediaData = [];
+    let commentsData = [];
+    let activeMediaId = null;
+    let currentReplyState = { parentId: null, replyTo: null, type: null }; // State Balas Pesan
+    let customAlertCallback = null; // Callback Custom Modal
+
+    // API Helper
+    async function apiRequest(url, method = 'GET', body = null, isFormData = false) {
+      const options = { method };
+      if (body) {
+        if (isFormData) {
+          options.body = body;
+        } else {
+          options.headers = { 'Content-Type': 'application/json' };
+          options.body = JSON.stringify(body);
+        }
+      }
+      try {
+        const response = await apiRequestFetch(url, options);
+        return await response.json();
+      } catch (err) {
+        console.error("API Error: ", err);
+      }
+    }
+
+    async function apiRequestFetch(url, options) {
+      return await fetch(url, options);
+    }
+
+    // Load Data Terpusat
+    async function loadData() {
+      siteSettings = await apiRequest('/api/settings');
+      mediaData = await apiRequest('/api/media');
+      commentsData = await apiRequest('/api/comments');
+      
+      applySettings();
+      renderUnifiedGallery();
+      renderGuestbook();
+      renderAdminMediaList();
+      fetchStats();
+
+      if (activeMediaId) {
+        renderModalComments();
+      }
+    }
+
+    async function fetchStats() {
+      if (!window.isAdminLoggedIn) return;
+      const stats = await apiRequest('/api/stats');
+      if (stats) {
+        document.getElementById('stat-users').innerText = stats.users || 0;
+        document.getElementById('stat-logs').innerText = stats.logs || 0;
+        document.getElementById('stat-photos').innerText = stats.photos || 0;
+        document.getElementById('stat-videos').innerText = stats.videos || 0;
+        document.getElementById('stat-guestbook').innerText = stats.guestbook || 0;
+        document.getElementById('stat-likes').innerText = stats.likes || 0;
+      }
+    }
+
+    // Mengaplikasikan Pengaturan Website & SINKRONISASI LOGO OTOMATIS
+    function applySettings() {
+      if (!siteSettings) return;
+      document.title = siteSettings.title || 'Website Class DKV';
+      document.getElementById('nav-title').innerText = siteSettings.title || 'DKV Class';
+      document.getElementById('nav-subtitle').innerText = siteSettings.sekolah || '';
+      document.getElementById('home-class-name').innerText = siteSettings.namaKelas || '';
+      document.getElementById('home-sub').innerText = `${siteSettings.nomorKelas || ''} - ${siteSettings.sekolah || ''}`;
+      document.getElementById('home-desc').innerText = `"${siteSettings.desc || ''}"`;
+      document.getElementById('home-wali').innerText = siteSettings.waliKelas || '';
+      
+      const logoUrl = siteSettings.logo || 'https://files.catbox.moe/lyxkgp.png';
+      document.getElementById('nav-logo').src = logoUrl;
+      document.getElementById('class-logo').src = logoUrl;
+      
+      // Sinkronisasi Otomatis Logo ke Komponen Header Modal
+      document.getElementById('modal-sync-logo').src = logoUrl;
+
+      if (siteSettings.bgImage) {
+        document.body.style.backgroundImage = `url('${siteSettings.bgImage}')`;
+      }
+      
+      const musicEl = document.getElementById('bg-music');
+      if (siteSettings.bgMusic && musicEl.src !== window.location.origin + siteSettings.bgMusic) {
+        musicEl.src = siteSettings.bgMusic;
+        document.getElementById('music-indicator').classList.remove('hidden');
+      } else if (!siteSettings.bgMusic) {
+        musicEl.removeAttribute('src');
+        document.getElementById('music-indicator').classList.add('hidden');
+        updateFloatingMusicUI(false);
+      }
+    }
+
+    // ================= CUSTOM MODAL DIALOGS (ANIMASI HALUS) =================
+    window.showAlert = function(msg, title = "Pemberitahuan", iconClass = "fa-solid fa-circle-info") {
+      setupCustomAlertUI(title, msg, iconClass, false, false);
+      customAlertCallback = null;
+    };
+
+    window.showCustomConfirm = function(msg, onConfirm) {
+      setupCustomAlertUI("Konfirmasi Tindakan", msg, "fa-solid fa-triangle-exclamation text-amber-500", true, false);
+      customAlertCallback = (status, val) => { if (status) onConfirm(); };
+    };
+
+    window.showCustomPrompt = function(msg, defaultVal, onConfirm) {
+      setupCustomAlertUI("Ubah Pesan", msg, "fa-solid fa-pen-to-square text-blue-500", true, true, defaultVal);
+      customAlertCallback = (status, val) => { if (status && onConfirm) onConfirm(val); };
+    };
+
+    function setupCustomAlertUI(title, msg, iconClass, showCancel, showInput, defaultInputVal = "") {
+      document.getElementById('alert-title').innerText = title;
+      document.getElementById('alert-message').innerText = msg;
+      document.getElementById('alert-icon').className = iconClass;
+      
+      const cancelBtn = document.getElementById('alert-btn-cancel');
+      const inputContainer = document.getElementById('alert-prompt-container');
+      const inputEl = document.getElementById('alert-prompt-input');
+
+      if (showCancel) cancelBtn.classList.remove('hidden');
+      else cancelBtn.classList.add('hidden');
+
+      if (showInput) {
+        inputContainer.classList.remove('hidden');
+        inputEl.value = defaultInputVal;
+      } else {
+        inputContainer.classList.add('hidden');
+      }
+
+      const box = document.getElementById('custom-alert');
+      box.classList.remove('hidden');
+      box.classList.add('flex');
+      setTimeout(() => {
+        box.classList.remove('opacity-0');
+        box.querySelector('div').classList.remove('scale-95');
+      }, 10);
+    }
+
+    window.closeAlert = function(confirmStatus) {
+      const box = document.getElementById('custom-alert');
+      const inputVal = document.getElementById('alert-prompt-input').value.trim();
+      
+      box.classList.add('opacity-0');
+      box.querySelector('div').classList.add('scale-95');
+      
+      setTimeout(() => {
+        box.classList.add('hidden');
+        box.classList.remove('flex');
+        if (customAlertCallback) customAlertCallback(confirmStatus, inputVal);
+      }, 300);
+    };
+
+    // ================= MENYATUKAN DATA GALERI (FOTO & VIDEO) =================
+    function renderUnifiedGallery() {
+      const grid = document.getElementById('grid-galeri');
+      grid.innerHTML = '';
+
+      mediaData.forEach(item => {
+        const totalLikes = item.likes ? item.likes.length : 0;
+        const totalComments = commentsData.filter(c => c.targetId === item.id).length;
+
+        const div = document.createElement('div');
+        div.className = 'group relative rounded-3xl overflow-hidden shadow-md bg-white cursor-pointer transform hover:-translate-y-1 transition-all duration-300 border border-pink-100/40 aspect-square';
+        div.onclick = () => openInstagramModal(item);
+
+        let previewHTML = '';
+        if (item.type === 'video') {
+          previewHTML = `
+            <div class="w-full h-full bg-gray-900 flex items-center justify-center relative">
+              <video src="${item.url}" class="w-full h-full object-cover opacity-80"></video>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-12 h-12 bg-black/60 rounded-full flex items-center justify-center text-white text-lg backdrop-blur-sm group-hover:scale-110 transition-transform"><i class="fa-solid fa-play ml-0.5"></i></div>
+              </div>
+              <span class="absolute top-3 right-3 bg-black/60 text-white text-[10px] px-2.5 py-1 rounded-full font-bold tracking-wider uppercase backdrop-blur-sm z-20 flex items-center gap-1"><i class="fa-solid fa-clapperboard"></i> Video</span>
+            </div>`;
+        } else {
+          previewHTML = `
+            <img src="${item.url}" alt="Foto Galeri" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+            <span class="absolute top-3 right-3 bg-pink-600/90 text-white text-[10px] px-2.5 py-1 rounded-full font-bold tracking-wider uppercase backdrop-blur-sm z-20 flex items-center gap-1"><i class="fa-solid fa-image"></i> Foto</span>`;
+        }
+
+        div.innerHTML = `
+          ${previewHTML}
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 text-white">
+            <span class="text-[9px] opacity-75 mb-1"><i class="fa-regular fa-clock"></i> ${formatIndoTime(item.createdAt)}</span>
+            <div class="flex items-center gap-4 font-bold text-sm">
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-heart text-pink-500 animate-pulse"></i> ${totalLikes}</span>
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-comment text-blue-400"></i> ${totalComments}</span>
+            </div>
+          </div>`;
+        grid.appendChild(div);
+      });
+
+      if (mediaData.length === 0) {
+        grid.innerHTML = `<div class="col-span-full py-16 text-center text-gray-400 font-semibold"><i class="fa-solid fa-face-frown text-3xl block mb-2 text-pink-300"></i> Galeri kenangan masih kosong.</div>`;
+      }
+    }
+
+    // ================= FITUR BALAS PESAN / REPLY LOGIC =================
+    window.activateReply = function(id, username, type) {
+      currentReplyState.parentId = id;
+      currentReplyState.replyTo = username;
+      currentReplyState.type = type;
+
+      if (type === 'gb') {
+        document.getElementById('gb-reply-text').innerText = `Membalas @${username}`;
+        document.getElementById('gb-reply-indicator').classList.remove('hidden');
+        document.getElementById('cmt-text').focus();
+      } else if (type === 'modal') {
+        document.getElementById('modal-reply-text').innerText = `Membalas @${username}`;
+        document.getElementById('modal-reply-indicator').classList.remove('hidden');
+        document.getElementById('modal-cmt-text').focus();
+      }
+    };
+
+    window.cancelCommentReply = function(type) {
+      currentReplyState = { parentId: null, replyTo: null, type: null };
+      if (type === 'gb') document.getElementById('gb-reply-indicator').classList.add('hidden');
+      if (type === 'modal') document.getElementById('modal-reply-indicator').classList.add('hidden');
+    };
+
+    // ================= BUKU TAMU RENDER =================
+    function renderGuestbook() {
+      const cList = document.getElementById('comment-list');
+      cList.innerHTML = '';
+
+      // Ambil Komentar Utama Buku Tamu (targetId 'website' & tidak punya parentId)
+      const mainComments = commentsData.filter(c => c.targetId === 'website' && !c.parentId);
+
+      mainComments.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'space-y-2';
+
+        // Tampilkan tombol modifikasi berdasarkan Hak Akses Pemilik atau Otoritas Penuh Admin
+        const showAdminOrOwnerControls = (c.ownerId === userId || window.isAdminLoggedIn);
+
+        let actionButtons = '';
+        if (showAdminOrOwnerControls) {
+          actionButtons = `
+            <div class="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onclick="editComment('${c.id}')" class="text-xs bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600 px-2 py-1 rounded-lg transition-colors font-bold"><i class="fa-solid fa-pen-to-square"></i></button>
+              <button onclick="deleteComment('${c.id}')" class="text-xs bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600 px-2 py-1 rounded-lg transition-colors font-bold"><i class="fa-solid fa-trash-can"></i></button>
+            </div>`;
+        }
+
+        item.innerHTML = `
+          <div class="bg-white/80 p-5 rounded-3xl shadow-sm border border-pink-100/50 relative group flex gap-4 transition-all hover:shadow-md">
+            <div class="w-10 h-10 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center font-bold flex-shrink-0 border">${c.userName.charAt(0).toUpperCase()}</div>
+            <div class="flex-1 pr-12">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-bold text-sm text-gray-800">${c.userName}</span>
+                <span class="bg-pink-100/70 text-pink-700 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">${c.status || 'Siswa'}</span>
+                <span class="text-[9px] text-gray-400 font-medium">${formatIndoTime(c.createdAt)}</span>
+              </div>
+              <p class="text-gray-600 text-xs mt-1.5 leading-relaxed whitespace-pre-line">${c.text}</p>
+              <button onclick="activateReply('${c.id}', '${c.userName}', 'gb')" class="text-[10px] text-pink-500 font-bold mt-2 hover:underline"><i class="fa-solid fa-reply"></i> Balas</button>
+            </div>
+            ${actionButtons}
+          </div>
+          <div id="reply-container-${c.id}" class="pl-12 space-y-2"></div>`;
+        
+        cList.appendChild(item);
+
+        // Render Anak Komentar Balasan (Replies)
+        const replies = commentsData.filter(r => r.parentId === c.id);
+        const replyBox = document.getElementById(`reply-container-${c.id}`);
+        
+        replies.forEach(r => {
+          const rControls = (r.ownerId === userId || window.isAdminLoggedIn);
+          let rButtons = '';
+          if (rControls) {
+            rButtons = `
+              <div class="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onclick="editComment('${r.id}')" class="text-[10px] bg-gray-50 text-gray-500 hover:text-blue-600 px-1.5 py-0.5 rounded transition-colors"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="deleteComment('${r.id}')" class="text-[10px] bg-gray-50 text-gray-500 hover:text-red-600 px-1.5 py-0.5 rounded transition-colors"><i class="fa-solid fa-trash"></i></button>
+              </div>`;
+          }
+
+          const rDiv = document.createElement('div');
+          rDiv.className = 'bg-pink-50/40 p-4 rounded-2xl border border-pink-100/30 relative group flex gap-3 shadow-inner';
+          rDiv.innerHTML = `
+            <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-xs flex-shrink-0 border">${r.userName.charAt(0).toUpperCase()}</div>
+            <div class="flex-1 pr-8">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="font-bold text-xs text-gray-800">${r.userName}</span>
+                <span class="bg-gray-200/60 text-gray-600 text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase">${r.status}</span>
+                <span class="text-[8px] text-gray-400 font-medium">${formatIndoTime(r.createdAt)}</span>
+              </div>
+              <p class="text-gray-600 text-xs mt-1 leading-relaxed"><span class="text-pink-600 font-bold text-[11px]">@${r.replyTo}</span> ${r.text}</p>
+            </div>
+            ${rButtons}`;
+          replyBox.appendChild(rDiv);
+        });
+      });
+
+      if (mainComments.length === 0) {
+        cList.innerHTML = `<div class="text-center py-12 text-gray-400 font-semibold"><i class="fa-solid fa-comments-dollar text-2xl block mb-1"></i> Belum ada pesan di buku tamu.</div>`;
+      }
+    }
+
+    // Submit Buku Tamu Form
+    document.getElementById('comment-form').onsubmit = async function(e) {
+      e.preventDefault();
+      const sender = document.getElementById('cmt-sender').value.trim();
+      const role = document.getElementById('cmt-role').value.trim() || 'Siswa';
+      const text = document.getElementById('cmt-text').value.trim();
+
+      const body = {
+        targetId: 'website',
+        userName: sender,
+        status: role,
+        text: text,
+        ownerId: userId,
+        parentId: currentReplyState.parentId,
+        replyTo: currentReplyState.replyTo
+      };
+
+      const res = await apiRequest('/api/comments', 'POST', body);
+      if (res && res.success) {
+        commentsData.push(res.comment);
+        cancelCommentReply('gb');
+        renderGuestbook();
+        document.getElementById('cmt-text').value = '';
+        fetchStats();
+        showAlert("Pesan Anda berhasil terkirim!", "Sukses", "fa-solid fa-circle-check text-green-500");
+      }
+    };
+
+    // ================= MODAL INSTAGRAM AREA LOGIC =================
+    window.openInstagramModal = function(item) {
+      activeMediaId = item.id;
+      cancelCommentReply('modal');
+
+      const modal = document.getElementById('instagram-modal');
+      const mImg = document.getElementById('modal-img');
+      const mVid = document.getElementById('modal-vid');
+
+      mImg.classList.add('hidden');
+      mVid.classList.add('hidden');
+
+      if (item.type === 'video') {
+        mVid.src = item.url;
+        mVid.classList.remove('hidden');
+      } else {
+        mImg.src = item.url;
+        mImg.classList.remove('hidden');
+      }
+
+      document.getElementById('modal-media-time').innerText = formatIndoTime(item.createdAt);
+      renderModalComments();
+      updateModalLikeUI(item);
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.querySelector('div').classList.remove('scale-95');
+      }, 10);
+    };
+
+    window.closeInstagramModal = function() {
+      const modal = document.getElementById('instagram-modal');
+      document.getElementById('modal-vid').pause();
+      
+      modal.classList.add('opacity-0');
+      modal.querySelector('div').classList.add('scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        activeMediaId = null;
+      }, 300);
+    };
+
+    function updateModalLikeUI(item) {
+      const isLiked = item.likes && item.likes.includes(userId);
+      const icon = document.getElementById('modal-like-icon');
+      const count = document.getElementById('modal-like-count');
+
+      count.innerText = `${item.likes ? item.likes.length : 0} Suka`;
+      if (isLiked) {
+        icon.className = 'fa-solid fa-heart text-xl text-red-500 scale-105';
+      } else {
+        icon.className = 'fa-regular fa-heart text-xl text-gray-600';
+      }
+    }
+
+    window.likeActiveMedia = async function() {
+      if (!activeMediaId) return;
+      const res = await apiRequest(`/api/media/${activeMediaId}/like`, 'POST', { userId });
+      if (res && res.success) {
+        const idx = mediaData.findIndex(m => m.id === activeMediaId);
+        if (idx !== -1) {
+          mediaData[idx].likes = res.likes;
+          updateModalLikeUI(mediaData[idx]);
+          renderUnifiedGallery();
+          fetchStats();
+        }
+      }
+    };
+
+    function renderModalComments() {
+      const area = document.getElementById('modal-comments-area');
+      area.innerHTML = '';
+
+      const mComments = commentsData.filter(c => c.targetId === activeMediaId && !c.parentId);
+
+      mComments.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'space-y-1.5';
+
+        const hasAccess = (c.ownerId === userId || window.isAdminLoggedIn);
+        let actionButtons = '';
+        if (hasAccess) {
+          actionButtons = `
+            <div class="flex gap-1.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onclick="editComment('${c.id}')" class="text-blue-500 text-[10px] hover:underline font-bold">Edit</button>
+              <button onclick="deleteComment('${c.id}')" class="text-red-500 text-[10px] hover:underline font-bold">Hapus</button>
+            </div>`;
+        }
+
+        div.innerHTML = `
+          <div class="flex gap-2.5 items-start group">
+            <div class="w-7 h-7 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center font-bold text-xs flex-shrink-0 border">${c.userName.charAt(0).toUpperCase()}</div>
+            <div class="bg-gray-100 p-2.5 rounded-2xl max-w-[80%]">
+              <div class="flex items-center gap-1 flex-wrap">
+                <span class="font-bold text-xs text-gray-800">${c.userName}</span>
+                <span class="text-[8px] text-gray-400 font-mono">${formatIndoTime(c.createdAt)}</span>
+              </div>
+              <p class="text-gray-700 text-xs mt-0.5 leading-relaxed">${c.text}</p>
+              <button onclick="activateReply('${c.id}', '${c.userName}', 'modal')" class="text-[9px] text-pink-500 font-bold mt-1 hover:underline block"><i class="fa-solid fa-reply"></i> Balas</button>
+            </div>
+            ${actionButtons}
+          </div>
+          <div id="modal-reply-box-${c.id}" class="pl-9 space-y-1.5"></div>`;
+        
+        area.appendChild(div);
+
+        // Render Anak Balasan Komentar di Modal
+        const replies = commentsData.filter(r => r.parentId === c.id);
+        const subBox = document.getElementById(`modal-reply-box-${c.id}`);
+
+        replies.forEach(r => {
+          const rHasAccess = (r.ownerId === userId || window.isAdminLoggedIn);
+          let rAction = '';
+          if (rHasAccess) {
+            rAction = `
+              <div class="flex gap-1.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onclick="editComment('${r.id}')" class="text-blue-500 text-[9px] hover:underline">Edit</button>
+                <button onclick="deleteComment('${r.id}')" class="text-red-500 text-[9px] hover:underline">Hapus</button>
+              </div>`;
+          }
+
+          const rDiv = document.createElement('div');
+          rDiv.className = 'flex gap-2 items-start group';
+          rDiv.innerHTML = `
+            <div class="w-6 h-6 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-[10px] flex-shrink-0 border">${r.userName.charAt(0).toUpperCase()}</div>
+            <div class="bg-pink-50/60 p-2 rounded-xl max-w-[85%] border border-pink-100/30">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="font-bold text-[11px] text-gray-800">${r.userName}</span>
+                <span class="text-[7px] text-gray-400">${formatIndoTime(r.createdAt)}</span>
+              </div>
+              <p class="text-gray-700 text-xs mt-0.5"><span class="text-pink-600 font-bold">@${r.replyTo}</span> ${r.text}</p>
+            </div>
+            ${rAction}`;
+          subBox.appendChild(rDiv);
+        });
+      });
+
+      if (mComments.length === 0) {
+        area.innerHTML = `<div class="text-center py-10 text-gray-400 text-xs font-semibold">Belum ada komentar.</div>`;
+      }
+    }
+
+    // Submit Komentar Modal
+    document.getElementById('modal-comment-form').onsubmit = async function(e) {
+      e.preventDefault();
+      if (!activeMediaId) return;
+
+      const nameInput = document.getElementById('modal-cmt-name');
+      const textInput = document.getElementById('modal-cmt-text');
+
+      const body = {
+        targetId: activeMediaId,
+        userName: nameInput.value.trim(),
+        status: 'Siswa',
+        text: textInput.value.trim(),
+        ownerId: userId,
+        parentId: currentReplyState.parentId,
+        replyTo: currentReplyState.replyTo
+      };
+
+      const res = await apiRequest('/api/comments', 'POST', body);
+      if (res && res.success) {
+        commentsData.push(res.comment);
+        cancelCommentReply('modal');
+        renderModalComments();
+        renderUnifiedGallery();
+        fetchStats();
+        textInput.value = '';
+      }
+    };
+
+    // ================= SINKRONISASI MANAJEMEN EDIT / HAPUS (ADMIN UTAMA) =================
+    window.editComment = function(id) {
+      const found = commentsData.find(c => c.id === id);
+      if (!found) return;
+
+      // Custom Prompt Dialog Menggantikan Prompt Bawaan Browser Browser
+      showCustomPrompt("Perbarui isi pesan Anda agar tetap sopan dan menarik:", found.text, async (newText) => {
+        if (!newText) return;
+        const body = { 
+          text: newText, 
+          userId, 
+          isAdmin: window.isAdminLoggedIn || false 
+        };
+        const res = await apiRequest(`/api/comments/${id}`, 'PUT', body);
+        if (res && res.success) {
+          const idx = commentsData.findIndex(c => c.id === id);
+          if (idx !== -1) commentsData[idx].text = newText;
+          renderGuestbook();
+          if (activeMediaId) renderModalComments();
+          showAlert("Komentar berhasil diperbarui!", "Sukses", "fa-solid fa-circle-check text-green-500");
+        } else {
+          showAlert(res.error || "Gagal mengubah komentar.");
+        }
+      });
+    };
+
+    window.deleteComment = function(id) {
+      // Custom Confirm Dialog Menggantikan Confirm Bawaan Browser Browser
+      showCustomConfirm("Apakah Anda yakin ingin menghapus pesan ini secara permanen?", async () => {
+        const body = { 
+          userId, 
+          isAdmin: window.isAdminLoggedIn || false 
+        };
+        const res = await apiRequest(`/api/comments/${id}`, 'DELETE', body);
+        if (res && res.success) {
+          // Bersihkan data lokal
+          commentsData = commentsData.filter(c => c.id !== id && c.parentId !== id);
+          renderGuestbook();
+          if (activeMediaId) renderModalComments();
+          fetchStats();
+          showAlert("Komentar berhasil dihapus.", "Sukses", "fa-solid fa-circle-check text-green-500");
+        } else {
+          showAlert(res.error || "Gagal memproses penghapusan.");
+        }
+      });
+    };
+
+    // ================= NAVIGATION SYSTEM =================
+    window.switchView = function(viewName) {
+      document.querySelectorAll('.view-section').forEach(sec => {
+        sec.classList.add('view-hidden');
+      });
+      document.getElementById(`view-${viewName}`).classList.remove('view-hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('text-pink-600', 'bg-pink-50', 'shadow-sm');
+        btn.classList.add('text-gray-600');
+      });
+      
+      const activeBtn = document.getElementById(`btn-${viewName}`);
+      if (activeBtn) {
+        activeBtn.classList.add('text-pink-600', 'bg-pink-50', 'shadow-sm');
+        activeBtn.classList.remove('text-gray-600');
+      }
+    };
+
+    // ================= ADMIN PANEL MANAGEMENT =================
+    document.getElementById('admin-login-form').onsubmit = function(e) {
+      e.preventDefault();
+      const pwd = document.getElementById('admin-password').value;
+      if (pwd === 'classdkv2025') {
+        window.isAdminLoggedIn = true;
+        document.getElementById('admin-login-box').classList.add('hidden');
+        document.getElementById('admin-dashboard').classList.remove('hidden');
+        document.getElementById('login-error').classList.add('hidden');
+        
+        // Refresh Tampilan Komentar Supaya Tombol Akses Admin Tampil Otomatis
+        renderGuestbook();
+        if (activeMediaId) renderModalComments();
+        fetchStats();
+        showAlert("Selamat datang panel administrator!", "Login Berhasil", "fa-solid fa-unlock text-green-500");
+      } else {
+        document.getElementById('login-error').classList.remove('hidden');
+      }
+    };
+
+    window.logoutAdmin = function() {
+      window.isAdminLoggedIn = false;
+      document.getElementById('admin-dashboard').classList.add('hidden');
+      document.getElementById('admin-login-box').classList.remove('hidden');
+      document.getElementById('admin-password').value = '';
+      renderGuestbook();
+      showAlert("Anda telah keluar dari panel administrator.");
+    };
+
+    // Submit Setting Web Admin (Theme Color Telah Dihapus Lengkap)
+    document.getElementById('settings-form').onsubmit = async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const res = await apiRequest('/api/settings', 'POST', formData, true);
+      if (res && res.success) {
+        siteSettings = res.settings;
+        applySettings();
+        fetchStats();
+        showAlert("Pengaturan website berhasil diperbarui!");
+      }
+    };
+
+    document.getElementById('btn-clear-music').onclick = function() {
+      showCustomConfirm("Hapus musik latar aktif saat ini?", async () => {
+        const res = await apiRequest('/api/settings/music', 'DELETE');
+        if (res && res.success) {
+          siteSettings = res.settings;
+          applySettings();
+          fetchStats();
+          showAlert("Musik berhasil dinonaktifkan.");
+        }
+      });
+    };
+
+    // Upload Media Form Admin
+    document.getElementById('media-upload-form').onsubmit = async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const res = await apiRequest('/api/media', 'POST', formData, true);
+      if (res && res.success) {
+        mediaData.unshift(res.media);
+        renderUnifiedGallery();
+        renderAdminMediaList();
+        fetchStats();
+        this.reset();
+        showAlert("Konten media baru berhasil ditambahkan ke galeri kelas!");
+      }
+    };
+
+    // Upload Music Form Admin
+    document.getElementById('music-upload-form').onsubmit = async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const res = await apiRequest('/api/settings', 'POST', formData, true);
+      if (res && res.success) {
+        siteSettings = res.settings;
+        applySettings();
+        fetchStats();
+        this.reset();
+        showAlert("Musik latar baru berhasil diunggah dan diaktifkan!");
+      }
+    };
+
+    function renderAdminMediaList() {
+      const wrapper = document.getElementById('admin-media-list');
+      wrapper.innerHTML = '';
+
+      mediaData.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'relative border rounded-2xl overflow-hidden group aspect-square bg-gray-50';
+        
+        let el = item.type === 'video' 
+          ? `<video src="${item.url}" class="w-full h-full object-cover"></video>`
+          : `<img src="${item.url}" class="w-full h-full object-cover">`;
+
+        div.innerHTML = `
+          ${el}
+          <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <button onclick="deleteMedia('${item.id}')" class="bg-red-600 text-white font-bold p-2 text-xs rounded-xl shadow hover:bg-red-700 transition-colors"><i class="fa-solid fa-trash-can"></i> Hapus</button>
+          </div>`;
+        wrapper.appendChild(div);
+      });
+    }
+
+    window.deleteMedia = function(id) {
+      showCustomConfirm("Hapus file media ini secara permanen beserta semua komentarnya?", async () => {
+        const res = await apiRequest(`/api/media/${id}`, 'DELETE');
+        if (res && res.success) {
+          mediaData = mediaData.filter(m => m.id !== id);
+          commentsData = commentsData.filter(c => c.targetId !== id);
+          renderUnifiedGallery();
+          renderAdminMediaList();
+          fetchStats();
+          showAlert("Media berhasil dihapus dari server.");
+        }
+      });
+    };
+
+    // ================= OPERASIONAL AUDIO & AUTOPLAY GUARD =================
+    window.toggleMusicPlayback = function() {
+      const musicEl = document.getElementById('bg-music');
+      if (!musicEl.src || musicEl.src === window.location.href) {
+        showAlert("Musik latar belum disetel oleh Admin.");
+        return;
+      }
+      if (musicEl.paused) {
+        musicEl.play().then(() => {
+          updateFloatingMusicUI(true);
+        }).catch(err => {
+          showAlert("Gagal memutar audio otomatis. Ketuk layar terlebih dahulu.");
+        });
+      } else {
+        musicEl.pause();
+        updateFloatingMusicUI(false);
+      }
+    };
+
+    function updateFloatingMusicUI(isPlaying) {
+      const icon = document.getElementById('float-music-icon');
+      const waves = document.getElementById('music-pulse-waves');
+      const container = icon.parentElement;
+
+      if (isPlaying) {
+        icon.className = 'fa-solid fa-pause text-xl';
+        waves.classList.remove('hidden');
+        container.classList.add('bg-green-500', 'hover:bg-green-600');
+        container.classList.remove('bg-pink-500', 'hover:bg-pink-600');
+      } else {
+        icon.className = 'fa-solid fa-play ml-0.5 text-xl';
+        waves.classList.add('hidden');
+        container.classList.add('bg-pink-500', 'hover:bg-pink-600');
+        container.classList.remove('bg-green-500', 'hover:bg-green-600');
+      }
+    }
+
+    // AUTOPLAY MUSIC GUARD: Berjalan otomatis begitu ada interaksi pertama di layar
+    document.addEventListener('click', function triggerAutoplay() {
+      const musicEl = document.getElementById('bg-music');
+      if (musicEl && musicEl.src && musicEl.paused && siteSettings.bgMusic) {
+        musicEl.play().then(() => {
+          updateFloatingMusicUI(true);
+        }).catch(e => console.log("Autoplay ditangguhkan mekanisme browser."));
+      }
+      document.removeEventListener('click', triggerAutoplay);
+    });
+
+    // Format Waktu Indo
+    function formatIndoTime(timestamp) {
+      if (!timestamp) return 'Baru saja';
+      const date = new Date(timestamp);
+      return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    // Realtime Clock Widget
+    setInterval(() => {
+      const now = new Date();
+      const optionsTime = { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+      const optionsDate = { timeZone: 'Asia/Jakarta', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+      document.getElementById('realtime-clock').innerText = new Intl.DateTimeFormat('id-ID', optionsTime).format(now) + ' WIB';
+      document.getElementById('realtime-date').innerText = new Intl.DateTimeFormat('id-ID', optionsDate).format(now);
+    }, 1000);
+
+    // Sakura Rain Generator
+    function createSakuraPetals() {
+      const container = document.getElementById('sakura-container');
+      container.innerHTML = '';
+      for (let i = 0; i < 20; i++) {
+        const petal = document.createElement('div');
+        petal.className = 'sakura-petal';
+        petal.style.left = `${Math.random() * 100}vw`;
+        petal.style.animationDuration = `${Math.random() * 5 + 7}s`;
+        petal.style.animationDelay = `${Math.random() * 5}s`;
+        const size = `${Math.random() * 10 + 6}px`;
+        petal.style.width = size;
+        petal.style.height = size;
+        petal.style.opacity = Math.random() * 0.6 + 0.4;
+        container.appendChild(petal);
+      }
+    }
+
+    // Jalankan Aplikasi Utama
+    window.onload = async function() {
+      createSakuraPetals();
+      await loadData();
+      await apiRequest('/api/join', 'POST', { userId });
+    };
+  </script>
+</body>
+</html>
